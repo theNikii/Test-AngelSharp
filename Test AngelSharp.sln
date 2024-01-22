@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test AngelSharp", "Test AngelSharp\Test AngelSharp.csproj", "{34B837E8-EDD5-4CEA-B849-BCFD5E465001}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{34B837E8-EDD5-4CEA-B849-BCFD5E465001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34B837E8-EDD5-4CEA-B849-BCFD5E465001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34B837E8-EDD5-4CEA-B849-BCFD5E465001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34B837E8-EDD5-4CEA-B849-BCFD5E465001}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4E0F8D36-A2DE-4E1B-BF87-1490C6AFF360}
+	EndGlobalSection
+EndGlobal
