@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using AngleSharp;
 using AngleSharp.Dom;
 using Npgsql;
+using System.Threading;
 
 namespace Test_AngelSharp
 {
@@ -21,7 +22,7 @@ namespace Test_AngelSharp
         string not_page = "Страница не найдена";
         string okpd_code = null;
         string error_page2 = null;
-        int count_site_item = 0;
+        
         public Form1()
         {
             InitializeComponent();
@@ -70,41 +71,54 @@ namespace Test_AngelSharp
                
                 string[] code1 = code_ktry.Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
                 
-                url = " https://zakupki44fz.ru/app/okpd2/" + code1[0] + "";
+                url = " https://moy-zakupki.ru/okpd-2/" + code1[0] + "/";
                
            
 
                 doc = await context.OpenAsync(url);
-                okpd_code = doc.Title;
+                //okpd_code = doc.Title;
+                var name_ocpd = doc.GetElementsByClassName("lg:text-3xl text-3xl font-bold text-gray-800 lg:w-3/4 items-center");
 
-                MessageBox.Show(okpd_code);
+                okpd_code = name_ocpd[0].Text().Trim();
+        
                
                
 
                 string[] words = okpd_code.Split(new char[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
 
+                comm.CommandText = "DELETE FROM describe ";
+                comm.ExecuteNonQuery();
+                comm.CommandText = "DELETE FROM nomenclature ";
+                comm.ExecuteNonQuery();
+                comm.CommandText = "DELETE FROM characteristic ";
+                comm.ExecuteNonQuery(); 
+                comm.CommandText = "DELETE FROM ktru ";
+                comm.ExecuteNonQuery();
+                comm.CommandText = "DELETE FROM okpd2 ";
+                comm.ExecuteNonQuery();
 
-               
-                comm.CommandText = "Delete from okpd2,ktru,nomenclature,describe,characteristic";
-                
 
                 comm.CommandText = "Insert into okpd2 (ocpd2_code,okpd2_name) Values(:_search0,:_search1)";                    
-                comm.Parameters.AddWithValue("_search0", code1[0].ToString().Trim());
-                comm.Parameters.AddWithValue("_search1", words[1]);
-               
-                                                
-                comm.CommandText = "Insert into ktru (ocpd2_code,ktru_code ,ktru_name) Values(:_search0,:_search2,:_search1)";
-                comm.Parameters.AddWithValue("_search0", code1[0].ToString().Trim());
-                comm.Parameters.AddWithValue("_search2", code_ktry.ToString().Trim());
-                comm.Parameters.AddWithValue("_search1", name_ktry);
-                
-                                  
-                comm.CommandText = "Insert into nomenclature (ocpd2_code,ktru_code ,nomenclature_name,nomenclature_id) Values(:_search0,:_search2,:_search1,default)";
-                comm.Parameters.AddWithValue("_search0", code1[0].ToString().Trim());
-                comm.Parameters.AddWithValue("_search2", code_ktry.ToString().Trim());
-                comm.Parameters.AddWithValue("_search1", name_ktry);
+                  comm.Parameters.AddWithValue("_search0", code1[0].Trim());
+                  comm.Parameters.AddWithValue("_search1", words[2].Trim());
+                  comm.ExecuteNonQuery();
 
-                comm.ExecuteNonQuery();
+                string nomcharid = code_ktry.Replace("-",".");
+                
+                  comm.CommandText = "Insert into ktru (ocpd2_code,ktru_code ,ktru_name) Values(:_search0,:_search2,:_search1)";
+                  comm.Parameters.AddWithValue("_search0", code1[0].Trim());
+                  comm.Parameters.AddWithValue("_search2", code_ktry.Trim());
+                  comm.Parameters.AddWithValue("_search1", name_ktry.Trim());          
+                  comm.ExecuteNonQuery();
+
+                  comm.CommandText = "Insert into nomenclature (ocpd2_code,ktru_code ,nomenclature_name,nomenclature_id,nomcharid) Values(:_search0,:_search2,:_search1,default,:_search3)";
+                  comm.Parameters.AddWithValue("_search0", code1[0].Trim());
+                  comm.Parameters.AddWithValue("_search2", code_ktry.Trim());
+                  comm.Parameters.AddWithValue("_search1", name_ktry.Trim());
+                  comm.Parameters.AddWithValue("_search3", nomcharid.Trim());
+                  comm.ExecuteNonQuery();
+               
+               
 
 
                 // MessageBox.Show("Назавание ОКПД2 - " + words[1] + "\nКод - " + code1[0]);
@@ -122,10 +136,10 @@ namespace Test_AngelSharp
                
 
                 int size_tab = size.Count();
-               
+                
 
-
-                for(int j=0; j<size_tab; j++)
+                
+                for (int j=0; j<size_tab; j++)
                 {
                     var name_chara = doc.GetElementsByClassName("tableBlock__row")[j].GetElementsByClassName("tableBlock__col tableBlock__col_first");
                     var unit = doc.GetElementsByClassName("tableBlock__row")[j].GetElementsByClassName("tableBlock__col");
@@ -151,57 +165,43 @@ namespace Test_AngelSharp
                             unit_char = (par.Text().Trim());
 
                         }
-                        MessageBox.Show("Наименование - "+ words1[0].Trim() + "\nОбязательность"+ need_char + "\nЗначение - "+unit_char);
+                        //MessageBox.Show("Наименование - "+ words1[0].Trim() + "\nОбязательность"+ need_char + "\nЗначение - "+unit_char);
+                        NpgsqlCommand comm1 = new NpgsqlCommand();
+                        comm1.Connection = conn;
+                        comm1.CommandType = CommandType.Text;
 
-                     
-                            comm.CommandText = "Insert into characteristic (characteristic_name, characteristic_id , characteristic_value, characteristic_unit,characteristic_into_tech_spec,characteristic_necessarily) " +
-                                "Values(:_search0,default,' ',:_search2,default,:_search1)";
-                            comm.Parameters.AddWithValue("_search0", words1[0].ToString().Trim());
-                            comm.Parameters.AddWithValue("_search2", unit_char.ToString().Trim());
-                            comm.Parameters.AddWithValue("_search1", need_char.ToString().Trim());
-                            
-                                                    
-                            comm.CommandText = "Select nomenclature_id from nomenclature where ktru_code = :_search0";
-                            comm.Parameters.AddWithValue("_search0", code_ktry.ToString());
-                            int int_code_bd = (int)comm.ExecuteScalar();
-                            comm.CommandText = "Select characteristic_id from  characteristic where  characteristic_name = :_search0";
-                            comm.Parameters.AddWithValue("_search0", code_ktry.ToString());
-                            int int_code_bd1 = (int)comm.ExecuteScalar();
-
-                            comm.CommandText = "Insert into describe (characteristic_id,nomenclature_id) Values(:_search0,:_search2)";
-                            comm.Parameters.AddWithValue("_search0", int_code_bd);
-                            comm.Parameters.AddWithValue("_search2", int_code_bd1);
-
-                            comm.ExecuteNonQuery();
+                        comm1.CommandText = "Insert into characteristic (characteristic_name, characteristic_id , characteristic_value, " +
+                            "characteristic_unit,characteristic_into_tech_spec,characteristic_necessarily,nomcharid) " +
+                                "Values(:_search0,default,' ',:_search2,false,:_search1,:_search3)";
+                            comm1.Parameters.AddWithValue("_search0", words1[0].Trim());
+                            comm1.Parameters.AddWithValue("_search2", unit_char.Trim());
+                            comm1.Parameters.AddWithValue("_search1", need_char.Trim());
+                        comm1.Parameters.AddWithValue("_search3", nomcharid.Trim());
+                        comm1.ExecuteNonQuery();
 
 
+                        comm1.CommandText = "Select characteristic_id from characteristic where nomcharid = :_search3";
+                        comm1.Parameters.AddWithValue("_search3", nomcharid.Trim());
+                        int char_id = (int) comm1.ExecuteScalar();
                         
+                        comm1.CommandText = "Select nomenclature_id from nomenclature where nomcharid = :_search3";
+                        comm1.Parameters.AddWithValue("_search3", nomcharid.Trim());
+                        int nom_id = (int)comm1.ExecuteScalar();
+                        
+                        comm1.CommandText = "Insert into describe (characteristic_id ,nomenclature_id ) Values(:_search2,:_search1)";
+                        comm1.Parameters.AddWithValue("_search2", char_id);
+                        comm1.Parameters.AddWithValue("_search1", nom_id);
+                        comm1.ExecuteNonQuery();
+
+
                     }
 
                 }
 
-
-
-                // таблица номенклатура
-                // id\название\код ктуръкод опкд
-                // таблица характеристики
-                // id\название\значение\единица измер\ добавление в тех\ обязательность
-                // таблица связь
-                // id хар\ id ном
-
-               
-
-              
-                
-                /* comm.CommandText = "Insert into technical_specification (tech_spec_name_item,tech_spec_value_char,tech_spec_unit_char,tech_spec_count,tech_spec_price," +
-                "tech_spec_id,tech_spec_date,tech_spec_to_doc,tech_spec_used,user_login)" +
-                "Values(:_search0,:_search1,:_search2,:_search3,:_search4,default, default, default, default,:_user)";*/
-                //comm.Parameters.AddWithValue("_search0", Tech_Spec0);
-
               
                 comm.Dispose();
                 conn.Close();
-
+                MessageBox.Show("STOP");
 
             }
         }
